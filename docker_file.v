@@ -83,6 +83,7 @@ pub fn (mut f Dockerfile) write_run(cmds ...[]string) {
 
 // pub fn (mut d Dockerfile) expose(portproto string) {}
 
+// write_env writes single ENV statement into builder.
 pub fn (mut d Dockerfile) write_env(key string, value string) {
 	d.writeln('ENV ${key}=${value}')
 }
