@@ -1,0 +1,48 @@
+name: Docs
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup V
+        run: |
+          git clone --depth=1 https://github.com/vlang/v /tmp/v && cd /tmp/v && make
+          /tmp/v/v symlink
+
+      - name: Build docs
+        run: |
+          v missdoc -r --verify .
+          v doc -f html -m .
+          pushd _docs
+          ln -vs ${{ github.event.repository.name }}.html index.html
+          ls -alFh
+          popd
+
+      - name: Upload static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _docs/
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
