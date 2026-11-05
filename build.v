@@ -3,12 +3,15 @@ module releasekit
 import maps
 import os
 
+const host_os = os.user_os()
+const host_arch = os.uname().machine
+
 pub struct Build {
 pub:
 	name     string
 	version  string
-	os       string = os.user_os()
-	arch     string = os.uname().machine
+	os       string = host_os
+	arch     string = host_arch
 	work_dir string = '.'
 	v        string = 'v'
 	cc       string

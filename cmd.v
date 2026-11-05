@@ -5,6 +5,7 @@ import os
 
 // has_cmd returns true if command *name* is available.
 // Note: Use relative or absolute paths for executables located outside of PATH.
+@[deprecated: 'use which()']
 pub fn has_cmd(name string) bool {
 	_ := path_of_executable(name) or { return false }
 	return true
@@ -12,20 +13,25 @@ pub fn has_cmd(name string) bool {
 
 // ensure_cmd checks if the command *name* is available and exits if not.
 // Note: Use relative or absolute paths for executables located outside of PATH.
-@[noterurn]
 pub fn ensure_cmd(name string) {
-	if !has_cmd(name) {
-		text :=
-			pretty_error('command `${name}` is not installed or not in PATH, please install it first')
+	if which(name) == none {
+		text := pretty_error('command `${name}` is not installed or not in PATH, please install it first')
 		print_and_exit(text, 1)
 	}
 }
 
-// path_of_executable returns the absolute path of the executable file *name*.
+// path_of_executable returns the absolute path of the executable file *name*
+// or fails with os.ExecutableNotFoundError error.
 // Note: Use relative or absolute paths for executables located outside of PATH.
 pub fn path_of_executable(name string) !string {
+	return which(name) or { os.ExecutableNotFoundError{} }
+}
+
+// which returns the absolute path of the executable file *name* or none.
+// Note: Use relative or absolute paths for executables located outside of PATH.
+pub fn which(name string) ?string {
 	if name.is_blank() {
-		return os.ExecutableNotFoundError{}
+		return none
 	}
 
 	// Do not search executable in PATH if its name contains a slashes (as POSIX-shells does),
@@ -36,7 +42,7 @@ pub fn path_of_executable(name string) !string {
 		if is_executable_file(actual_path) {
 			return actual_path
 		} else {
-			return os.ExecutableNotFoundError{}
+			return none
 		}
 	}
 
@@ -53,7 +59,7 @@ pub fn path_of_executable(name string) !string {
 		}
 	}
 
-	return os.ExecutableNotFoundError{}
+	return none
 }
 
 fn is_executable_file(file string) bool {

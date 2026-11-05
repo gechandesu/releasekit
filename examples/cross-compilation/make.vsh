@@ -120,11 +120,13 @@ fn build_dockerfile(targets []Build) string {
 	f.write_from(docker_base_image, 'base')
 	f.write_env('VMODULES', '/tmp/vmodules')
 	f.write_env('VCACHE', '/tmp/vcache')
-	f.write_run(...[['export', 'DEBIAN_FRONTEND=noninteractive'],
+	f.write_env('DEBIAN_FRONTEND', 'noninteractive')
+	f.write_run(...[
 		['apt-get', 'update'],
-		['apt-get', 'install', '--yes', '--no-install-recommends',
-			'--no-install-suggests', 'build-essential', 'ca-certificates', 'git'],
-		['apt-get', 'clean']])
+		['apt-get', 'install', '--yes', '--no-install-recommends', '--no-install-suggests',
+			'build-essential', 'ca-certificates', 'git'],
+		['apt-get', 'clean'],
+	])
 	f.write_run(...[
 		['git', 'clone', '--depth=1', 'https://github.com/vlang/v', '/opt/v'],
 		['make', '-C', '/opt/v'],
@@ -156,7 +158,6 @@ fn build_dockerfile(targets []Build) string {
 			commands << ['dpkg', '--add-architecture', deb_arch]
 		}
 		if packages.len > 0 {
-			commands << ['export', 'DEBIAN_FRONTEND=noninteractive']
 			commands << ['apt-get', 'update']
 			commands << arrays.append([
 				'apt-get',
